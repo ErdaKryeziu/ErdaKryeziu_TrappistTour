@@ -43,7 +43,19 @@ me ΔV < 2500 m/s dhe T < 4000 ditë.
 
 ## Si ekzekutohet
 
-Do te plotesohet gjate punes.
+Kodi zyrtar i problemit (src/trappist_udp.py) kërkon pykep 2.6, që nuk ka
+paketë në PyPI. Prandaj përdoret një mjedis conda, i përshkruar te
+environment.yml (Python 3.10, pykep 2.6, pygmo).
+
+Në Kaggle (Internet = On):
+
+    git clone https://github.com/ErdaKryeziu/ErdaKryeziu_TrappistTour.git
+    cd ErdaKryeziu_TrappistTour
+    bash scripts/setup_kaggle.sh
+    MAMBA_ROOT_PREFIX=/kaggle/temp/mroot /kaggle/temp/mm/bin/micromamba run -n old python scripts/smoke_test.py
+
+Rezultati i pritur i smoke test-it për vektorin shembull (udp.example()):
+ΔV = 2378.992 m/s dhe T = 3469.83 ditë.
 
 ## Rezultatet
 
