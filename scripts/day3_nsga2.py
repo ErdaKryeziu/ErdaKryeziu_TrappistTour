@@ -2,11 +2,14 @@
 
 Perdorimi:  python scripts/day3_nsga2.py [GEN] [POP] [SEED] [MAX_ORE] [KUFIJTE]
             parazgjedhje: GEN=500, POP=100, SEED=42, MAX_ORE=0 (pa kufi), KUFIJTE=full
-            KUFIJTE: full  = kufijte zyrtare
+            KUFIJTE: full  = kufijte zyrtare, popullata fillestare e rastesishme
                      tight = kufijte e ngushtuar (shih moo.tight_bounds)
+                     warm  = kufijte zyrtare + nisje e ngrohte nga zgjidhja
+                             shembull e ESA-s (shih moo.warm_start_population)
 Shembuj:    ... day3_nsga2.py 50 100 42                    (prove e shkurter)
             ... day3_nsga2.py 2000 100 42 0 tight          (kufij te ngushtuar)
-            ... day3_nsga2.py 100000000 100 42 7 tight     (ekzekutim 7-oresh)
+            ... day3_nsga2.py 2000 100 42 0 warm           (nisje e ngrohte)
+            ... day3_nsga2.py 100000000 100 42 7 warm      (ekzekutim 7-oresh)
 Rezultatet ruhen ne results/ me prapashtesen _<KUFIJTE>_seed<SEED> dhe ruhen
 edhe gjate punes (cdo 15 min), qe te mos humbin nese ndalet sesioni.
 """
@@ -36,8 +39,8 @@ SEED = int(sys.argv[3]) if len(sys.argv) > 3 else 42
 MAX_H = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
 MAX_SEC = MAX_H * 3600 if MAX_H > 0 else float("inf")
 MODE = sys.argv[5] if len(sys.argv) > 5 else "full"
-if MODE not in ("full", "tight"):
-    sys.exit("KUFIJTE duhet te jete 'full' ose 'tight'")
+if MODE not in ("full", "tight", "warm"):
+    sys.exit("KUFIJTE duhet te jete 'full', 'tight' ose 'warm'")
 CHUNK = 10                      # sa gjenerata ndermjet dy matjeve
 SAVE_EVERY = 15 * 60            # ruajtje e ndermjetme (sekonda)
 if POP < 8 or POP % 4 != 0:
@@ -106,7 +109,11 @@ limit = "pa kufi" if MAX_SEC == float("inf") else f"{MAX_SEC / 3600:.1f} ore"
 print(f"\nNSGA-II: pop={POP}, gen={GEN}, seed={SEED}, kufijte: {MODE}, kufiri i kohes: {limit}", flush=True)
 moo.reset_archive()
 prob = pg.problem(moo.TrappistRK(tight=(MODE == "tight")))
-pop = pg.population(prob, size=POP, seed=SEED)
+if MODE == "warm":
+    pop = moo.warm_start_population(prob, POP, SEED)
+else:
+    pop = pg.population(prob, size=POP, seed=SEED)
+print(f"Popullata fillestare: {len(pop)} zgjidhje, HV fillestar = {moo.hypervolume(moo.ARCHIVE_F):.0f}", flush=True)
 algo = pg.algorithm(pg.nsga2(gen=CHUNK, seed=SEED))
 
 log = []

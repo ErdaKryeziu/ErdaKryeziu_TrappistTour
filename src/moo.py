@@ -95,6 +95,38 @@ class TrappistRK:
         return [v, v]
 
 
+def encode(x):
+    """E kunderta e decode: vektori zyrtar -> vektori i algoritmit.
+    Planeti ne pozicionin k merr celesin (k + 0.5) / 7, keshtu argsort jep
+    perseri te njejten sekuence."""
+    x = np.asarray(x, dtype=float)
+    z = np.empty(P.N_DIM)
+    z[:P.N_CONT] = x[:P.N_CONT]
+    seq = x[P.N_CONT:].astype(int)
+    keys = np.empty(P.N_INT)
+    for pos, planet in enumerate(seq):
+        keys[planet] = (pos + 0.5) / P.N_INT
+    z[P.N_CONT:] = keys
+    return z
+
+
+def warm_start_population(prob, size, seed, sigma=0.02):
+    """Popullata fillestare: zgjidhja shembull e ESA-s + (size-1) variante te saj
+    me zhurme gausiane (sigma = pjese e gjeresise se kufirit) ne pjesen e
+    vazhdueshme. Sekuenca e planeteve mbetet ajo e shembullit."""
+    import pygmo as pg
+    rng = np.random.default_rng(seed)
+    lb, ub = (np.asarray(b, dtype=float) for b in prob.get_bounds())
+    z0 = np.clip(encode(P.udp.example()), lb, ub)
+    pop = pg.population(prob, size=0, seed=seed)
+    pop.push_back(z0)
+    for _ in range(size - 1):
+        z = z0.copy()
+        z[:P.N_CONT] += rng.normal(0.0, sigma, P.N_CONT) * (ub - lb)[:P.N_CONT]
+        pop.push_back(np.clip(z, lb, ub))
+    return pop
+
+
 def prune_archive(limit=5000):
     """Kur arkivi rritet shume, mban vetem pikat jo te dominuara
     (hypervolume nuk ndryshon, sepse varet vetem prej tyre)."""
