@@ -1,10 +1,13 @@
 """Dita 3: NSGA-II (pygmo) ne Trappist Tour + hypervolume.
 
-Perdorimi:  python scripts/day3_nsga2.py [GEN] [POP] [SEED] [MAX_ORE]
-            parazgjedhje: GEN=500, POP=100, SEED=42, MAX_ORE=pa kufi
-Shembuj:    ... day3_nsga2.py 50 100 42            (prove e shkurter)
-            ... day3_nsga2.py 100000000 100 42 7   (ekzekutim 7-oresh)
-Rezultatet ruhen ne results/ me prapashtesen _seed<SEED> dhe ruhen
+Perdorimi:  python scripts/day3_nsga2.py [GEN] [POP] [SEED] [MAX_ORE] [KUFIJTE]
+            parazgjedhje: GEN=500, POP=100, SEED=42, MAX_ORE=0 (pa kufi), KUFIJTE=full
+            KUFIJTE: full  = kufijte zyrtare
+                     tight = kufijte e ngushtuar (shih moo.tight_bounds)
+Shembuj:    ... day3_nsga2.py 50 100 42                    (prove e shkurter)
+            ... day3_nsga2.py 2000 100 42 0 tight          (kufij te ngushtuar)
+            ... day3_nsga2.py 100000000 100 42 7 tight     (ekzekutim 7-oresh)
+Rezultatet ruhen ne results/ me prapashtesen _<KUFIJTE>_seed<SEED> dhe ruhen
 edhe gjate punes (cdo 15 min), qe te mos humbin nese ndalet sesioni.
 """
 import csv
@@ -30,12 +33,16 @@ import moo
 GEN = int(sys.argv[1]) if len(sys.argv) > 1 else 500
 POP = int(sys.argv[2]) if len(sys.argv) > 2 else 100
 SEED = int(sys.argv[3]) if len(sys.argv) > 3 else 42
-MAX_SEC = float(sys.argv[4]) * 3600 if len(sys.argv) > 4 else float("inf")
+MAX_H = float(sys.argv[4]) if len(sys.argv) > 4 else 0.0
+MAX_SEC = MAX_H * 3600 if MAX_H > 0 else float("inf")
+MODE = sys.argv[5] if len(sys.argv) > 5 else "full"
+if MODE not in ("full", "tight"):
+    sys.exit("KUFIJTE duhet te jete 'full' ose 'tight'")
 CHUNK = 10                      # sa gjenerata ndermjet dy matjeve
 SAVE_EVERY = 15 * 60            # ruajtje e ndermjetme (sekonda)
 if POP < 8 or POP % 4 != 0:
     sys.exit("POP duhet te jete shumefish i 4 dhe >= 8 (kerkese e NSGA-II ne pygmo)")
-tag = f"seed{SEED}"
+tag = f"{MODE}_seed{SEED}"
 
 # ---- 1. Kontroll i metrikes me zgjidhjen shembull te ESA-s ----
 dv_ex, t_ex, _, _, _ = P.evaluate(P.udp.example())
@@ -96,9 +103,9 @@ def save(log):
 
 # ---- 2. NSGA-II ----
 limit = "pa kufi" if MAX_SEC == float("inf") else f"{MAX_SEC / 3600:.1f} ore"
-print(f"\nNSGA-II: pop={POP}, gen={GEN}, seed={SEED}, kufiri i kohes: {limit}", flush=True)
+print(f"\nNSGA-II: pop={POP}, gen={GEN}, seed={SEED}, kufijte: {MODE}, kufiri i kohes: {limit}", flush=True)
 moo.reset_archive()
-prob = pg.problem(moo.TrappistRK())
+prob = pg.problem(moo.TrappistRK(tight=(MODE == "tight")))
 pop = pg.population(prob, size=POP, seed=SEED)
 algo = pg.algorithm(pg.nsga2(gen=CHUNK, seed=SEED))
 

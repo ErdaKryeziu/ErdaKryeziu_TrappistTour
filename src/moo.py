@@ -39,12 +39,38 @@ def decode(z):
     return x
 
 
+def tight_bounds():
+    """Kufij te ngushtuar me njohuri te domenit (hapesire kerkimi me e vogel).
+    Arsyeja: planetet e TRAPPIST-1 kane periudha 1.5-19 dite, ndaj legjet
+    ndermjet planeteve jane te shkurtra; vetem hyrja nga 10 AU zgjat shume.
+    Kufijte jane nenbashkesi e kufijve zyrtare, pra cdo zgjidhje mbetet e lejuar.
+      T0 (hyrja ne sistem)  : [1000, 2000] dite  (zyrtar: [5, 2000])
+      T e legjeve te tjera  : [5, 400] dite      (zyrtar: [5, 2000])
+      rp/rP (lartesia flyby): [1.1, 10]          (zyrtar: [1.1, 100])
+    """
+    lb = P.LB[:P.N_CONT].copy()
+    ub = P.UB[:P.N_CONT].copy()
+    lb[2], ub[2] = 1000.0, 2000.0
+    for k in range(6):
+        ub[4 + 4 * k] = 10.0      # rp/rP
+        ub[6 + 4 * k] = 400.0     # T e legut
+    return lb, ub
+
+
 class TrappistRK:
-    """Problem pa kufizime (per pygmo): 34 numra te vazhdueshem, 2 objektiva."""
+    """Problem pa kufizime (per pygmo): 34 numra te vazhdueshem, 2 objektiva.
+    tight=True perdor kufijte e ngushtuar (shih tight_bounds)."""
+
+    def __init__(self, tight=False):
+        self.tight = tight
 
     def get_bounds(self):
-        lb = np.concatenate([P.LB[:P.N_CONT], np.zeros(P.N_INT)])
-        ub = np.concatenate([P.UB[:P.N_CONT], np.ones(P.N_INT)])
+        if self.tight:
+            lbc, ubc = tight_bounds()
+        else:
+            lbc, ubc = P.LB[:P.N_CONT], P.UB[:P.N_CONT]
+        lb = np.concatenate([lbc, np.zeros(P.N_INT)])
+        ub = np.concatenate([ubc, np.ones(P.N_INT)])
         return (lb, ub)
 
     def get_nobj(self):
