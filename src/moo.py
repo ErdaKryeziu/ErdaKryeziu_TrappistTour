@@ -69,6 +69,19 @@ class TrappistRK:
         return [v, v]
 
 
+def prune_archive(limit=5000):
+    """Kur arkivi rritet shume, mban vetem pikat jo te dominuara
+    (hypervolume nuk ndryshon, sepse varet vetem prej tyre)."""
+    if len(ARCHIVE_F) <= limit:
+        return
+    F = np.asarray(ARCHIVE_F, dtype=float)
+    keep = pg.non_dominated_front_2d(F)
+    newF = [ARCHIVE_F[i] for i in keep]
+    newX = [ARCHIVE_X[i] for i in keep]
+    ARCHIVE_F[:] = newF
+    ARCHIVE_X[:] = newX
+
+
 def pareto_front(points):
     """Kthen pikat jo te dominuara (2 objektiva), te renditura sipas DV."""
     pts = np.asarray(points, dtype=float).reshape(-1, 2)
