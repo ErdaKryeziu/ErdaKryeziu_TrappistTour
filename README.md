@@ -26,9 +26,24 @@ Zgjidhja nuk është një rrugë e vetme, por një bashkësi zgjidhjesh që për
 Pareto frontin. Cilësia matet me hypervolume, ku llogariten vetëm zgjidhjet
 me ΔV < 2500 m/s dhe T < 4000 ditë.
 
+## Vektori i vendimit (34 dimensione)
+
+| Pjesa | Dimensione | Kuptimi |
+|---|---|---|
+| u, v, T0 | 3 | këndi i hyrjes në sistem dhe kohëzgjatja e legut të parë |
+| 6 blloqe [beta, rp/rP, eta, T] | 24 | për secilin planet: flyby (beta, rp/rP), koha e DSM (eta) dhe kohëzgjatja e legut (T) |
+| sekuenca s0..s6 | 7 | permutacion i numrave 0..6: rendi i vizitës së planetëve |
+
+Kufizimet:
+
+- eq: sekuenca duhet të jetë permutacion (eq = 0).
+- ineq: sonda nuk guxon të afrohet shumë te ylli (ineq <= 0).
+
+Një zgjidhje është e vlefshme (feasible) vetëm nëse të dyja plotësohen.
+
 ## Qasja
 
-1. Baseline: random search.
+1. Baseline: random search (Dita 2).
 2. NSGA-II (pygmo).
 3. Algoritëm i dytë për krahasim.
 4. NSGA-II i ndihmuar nga model zëvendësues (surrogate), i trajnuar në GPU.
@@ -36,7 +51,8 @@ me ΔV < 2500 m/s dhe T < 4000 ditë.
 
 ## Struktura e repo-s
 
-- src/ : kodi burimor
+- src/ : kodi burimor (UDP zyrtare dhe funksionet ndihmëse)
+- scripts/ : skriptat për mjedisin dhe eksperimentet
 - notebooks/ : notebooks (Kaggle)
 - results/ : rezultatet e eksperimenteve
 - report/ : raporti final
@@ -53,10 +69,27 @@ Në Kaggle (Internet = On):
     cd ErdaKryeziu_TrappistTour
     bash scripts/setup_kaggle.sh
     MAMBA_ROOT_PREFIX=/kaggle/temp/mroot /kaggle/temp/mm/bin/micromamba run -n old python scripts/smoke_test.py
+    MAMBA_ROOT_PREFIX=/kaggle/temp/mroot /kaggle/temp/mm/bin/micromamba run -n old python scripts/day2_sampling.py 1000
 
 Rezultati i pritur i smoke test-it për vektorin shembull (udp.example()):
 ΔV = 2378.992 m/s dhe T = 3469.83 ditë.
 
 ## Rezultatet
 
-Do te plotsohen pas eksperimenteve.
+### Baseline i rastësishëm (1000 zgjidhje, seed = 42)
+
+Skripta: scripts/day2_sampling.py. Sekuenca gjenerohet si permutacion i
+rastësishëm, ndërsa 27 numrat e tjerë uniformisht brenda kufijve.
+
+- Të 1000 vlerësimet përfunduan pa gabime (0 death penalty, 0 përjashtime).
+- 46 nga 1000 zgjidhje janë të vlefshme (të tjerat e shkelin largësinë nga ylli).
+- Asnjë zgjidhje nuk bie brenda kutisë ΔV < 2500 m/s dhe T < 4000 ditë,
+  pra hypervolume i random search është 0.
+- ΔV mediana është 852857 m/s, ndërsa ΔV më e vogël midis të vlefshmeve
+  është 18196 m/s (T = 8854 ditë).
+- Koha totale T: min 2708, mediana 7037, max 11449 ditë.
+- Përfundim: random search nuk e gjen zonën e mirë të hapësirës së kërkimit
+  (zgjidhja shembull e ESA-s ka ΔV = 2379 m/s), prandaj duhen algoritme të
+  mençur. Ky rezultat shërben si pikë krahasimi.
+
+Rezultatet e tjera do të plotësohen pas eksperimenteve.
