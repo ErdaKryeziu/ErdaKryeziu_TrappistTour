@@ -3,7 +3,8 @@
 Perdorimi:
     python scripts/run_moo.py ALGO NISJA SEED MAX_VLERESIME [MAX_ORE] [POP]
 
-    ALGO          : nsga2 | moead | nspso
+    ALGO          : nsga2 | moead | nspso | nspso_local
+                    (nspso_local = NSPSO me shpejtesi maksimale 5% e kufirit, per kerkim lokal)
     NISJA         : warm (nga zgjidhja shembull e ESA-s) | full (e rastesishme)
     SEED          : numri i rastesise, p.sh. 1
     MAX_VLERESIME : sa vleresime te funksionit lejohen (buxheti), p.sh. 10000000
@@ -52,8 +53,8 @@ CHUNK = 10                      # gjenerata ndermjet dy matjeve
 SAVE_EVERY = 15 * 60
 PRINT_EVERY = 60
 
-if ALGO not in ("nsga2", "moead", "nspso"):
-    sys.exit("ALGO duhet te jete nsga2, moead ose nspso")
+if ALGO not in ("nsga2", "moead", "nspso", "nspso_local"):
+    sys.exit("ALGO duhet te jete nsga2, moead, nspso ose nspso_local")
 if MODE not in ("warm", "full"):
     sys.exit("NISJA duhet te jete warm ose full")
 if ALGO == "nsga2" and (POP < 8 or POP % 4 != 0):
@@ -70,7 +71,9 @@ def make_algorithm():
                        neighbours=20, CR=1.0, F=0.5, eta_m=20.0, realb=0.9, limit=2,
                        preserve_diversity=True, seed=SEED)
     else:  # nspso; memory=True qe shpejtesite te ruhen ndermjet thirrjeve
-        uda = pg.nspso(gen=CHUNK, omega=0.6, c1=0.01, c2=0.5, chi=0.5, v_coeff=0.5,
+        # nspso_local: shpejtesia maksimale 5% e gjeresise se kufirit (parazgjedhja 50%)
+        v_coeff = 0.05 if ALGO == "nspso_local" else 0.5
+        uda = pg.nspso(gen=CHUNK, omega=0.6, c1=0.01, c2=0.5, chi=0.5, v_coeff=v_coeff,
                        leader_selection_range=2, diversity_mechanism="crowding distance",
                        memory=True, seed=SEED)
     return pg.algorithm(uda)
