@@ -112,11 +112,21 @@ for algo, files in RUNS.items():
         allX.append(X)
         print(f"{algo:8s} {f:32s} HV(100) = {h:12.0f}  -> vendi {rank_of(h)}/20")
 
+# Fronti i CMA-ES me epsilon-kufizim (nese ekziston)
+cma_files = sorted(os.path.basename(f) for f in glob.glob(os.path.join(RES, "cmaes_w*_front.csv")))
+for f in cma_files:
+    Fc, Xc = load_front(f)
+    h = hv(best_k(Fc, Xc)[0])
+    rows.append(("CMA-ES eps", f, len(nondominated(Fc)[0]), round(hv(Fc)), round(h)))
+    allF.append(Fc)
+    allX.append(Xc)
+    print(f"CMA-ES   {f:32s} HV(100) = {h:12.0f}  -> vendi {rank_of(h)}/20")
+
 F = np.vstack(allF)
 X = np.vstack(allX)
 Fk, Xk = best_k(F, X)
 h_comb = hv(Fk)
-print(f"\nI KOMBINUAR (6 ekzekutime, 100 zgjidhje): HV = {h_comb:.0f} -> vendi {rank_of(h_comb)}/20")
+print(f"\nI KOMBINUAR ({len(allF)} frontet, 100 zgjidhje): HV = {h_comb:.0f} -> vendi {rank_of(h_comb)}/20")
 for algo, v in per_algo.items():
     print(f"{algo:8s} mesatarja = {np.mean(v):.0f} +/- {np.std(v, ddof=1):.0f}")
 
@@ -129,7 +139,7 @@ with open(os.path.join(RES, "final_summary.csv"), "w", newline="") as fh:
     w = csv.writer(fh)
     w.writerow(["algoritmi", "file", "pika_jo_te_dominuara", "hv_te_gjitha", "hv_100"])
     w.writerows(rows)
-    w.writerow(["KOMBINUAR", "6 ekzekutime", len(nondominated(F)[0]), round(hv(F)), round(h_comb)])
+    w.writerow(["KOMBINUAR", f"{len(allF)} frontet", len(nondominated(F)[0]), round(hv(F)), round(h_comb)])
 
 # ---- grafiku i krahasimit ----
 colors = {"NSGA-II": "tab:green", "MOEA/D": "tab:blue"}
@@ -142,7 +152,7 @@ for algo, files in PROGRESS.items():
                    label=algo if j == 0 else None)
 ax[0].axhspan(LEADERBOARD[2] / 1e6, LEADERBOARD[0] / 1e6, color="gold", alpha=0.3,
               label=f"top 3 SpOC 2022 ({LEADERBOARD[2] / 1e6:.2f}-{LEADERBOARD[0] / 1e6:.2f} M)")
-ax[0].axhline(h_comb / 1e6, color="red", ls="--", lw=1.2, label=f"kombinuar (100 pika) = {h_comb / 1e6:.2f} M")
+ax[0].axhline(h_comb / 1e6, color="red", ls="--", lw=1.2, label=f"fronti final (100 pika) = {h_comb / 1e6:.2f} M")
 ax[0].set_xscale("log")
 ax[0].set_xlim(0.01, 40)
 ax[0].set_ylim(0, 6.2)
@@ -155,6 +165,10 @@ for algo, files in RUNS.items():
     Fa = np.vstack([load_front(f)[0] for f in files])
     Fa, _ = nondominated(Fa)
     ax[1].step(Fa[:, 1], Fa[:, 0], where="post", color=colors[algo], alpha=0.7, label=f"{algo} (3 seed-e)")
+if cma_files:
+    Fc = np.vstack([load_front(f)[0] for f in cma_files])
+    Fc, _ = nondominated(Fc)
+    ax[1].step(Fc[:, 1], Fc[:, 0], where="post", color="tab:orange", alpha=0.8, label="CMA-ES me eps-kufizim")
 ax[1].scatter(Fk[:, 1], Fk[:, 0], s=10, c="red", zorder=3, label="100 zgjidhjet finale")
 ax[1].scatter([3469.83], [2378.99], marker="*", s=200, c="purple", label="shembulli ESA")
 ax[1].set_xlim(0, R_T)
