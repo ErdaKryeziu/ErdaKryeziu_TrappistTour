@@ -1,0 +1,8 @@
+algoritmi,file,pika_jo_te_dominuara,hv_te_gjitha,hv_100
+NSGA-II,nsga2_front_warm_seed1.csv,196,2116564,2116564
+NSGA-II,nsga2_front_warm_seed2.csv,604,2539848,2539844
+NSGA-II,nsga2_front_warm_seed3.csv,123,3103829,3103829
+MOEA/D,moead_warm_seed1_front.csv,3185,1945232,1945223
+MOEA/D,moead_warm_seed2_front.csv,2930,1988168,1988164
+MOEA/D,moead_warm_seed3_front.csv,3348,1119274,1119249
+KOMBINUAR,6 ekzekutime,190,3340450,3340449
